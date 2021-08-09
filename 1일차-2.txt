@@ -1,0 +1,28 @@
+ SQL> conn  scott/tiger
+SQL>  create table t1 as select empno,ename from emp ; 
+SQL> insert into t1 select * from t1; 
+        insert into  t1 select * from t1; 
+      commit;
+SQL> select count(*) from t1; 
+
+SQL> select table_name, num_rows
+         from user_tables
+         where table_name='T1' ; 
+
+SQL> analyze table t1 compute statistics ; 
+        select table_name, num_rows,  
+                  to_char(last_analyzed,'mmdd:hh24:mi:ss')
+         from user_tables
+         where table_name='T1' ; 
+
+SQL> delete t1 where empno <> 7788; 
+          commit;
+         select count(*) from t1; 
+
+
+        select table_name, num_rows,  
+                  to_char(last_analyzed,'mmdd:hh24:mi:ss')
+         from user_tables
+         where table_name='T1' ; 
+   
+  
