@@ -1,0 +1,64 @@
+SQL> exit
+sqlplus "/as sysdba"
+SQL> show user
+
+SQL> select * from v$sga;
+SQL> show sga
+
+SQL> select pool, sum(bytes)
+      from v$sgastat
+     group by pool ;
+SQL> select name from v$datafile; 
+SQL> select * from v$tablespace; 
+
+-- parse code 공유효과 확인.
+--1. 상수를 사용해 Parsing 한 경우 
+	
+SQL>set serveroutput on 
+
+SQL>alter system flush shared_pool;  
+     --> shared풀의 내용을 모두 지움(회사에서 하면 안됨)
+
+SQL>declare
+    type rc is ref cursor;
+    l_rc rc;
+    l_dummy all_objects.object_name%type;
+    l_start number default dbms_utility.get_time;
+begin
+    for i in 1 .. 9900
+    loop
+        open l_rc for
+        'select object_name
+           from dba_objects
+          where object_id = ' || i;
+        fetch l_rc into l_dummy;
+        close l_rc;
+    end loop;
+    dbms_output.put_line ( round( (dbms_utility.get_time-l_start)/100, 2 ) ||' seconds...' );
+end;
+/
+
+-- 2.  bind 변수를 사용한 경우를 비교
+SQL>alter system flush shared_pool;
+
+SQL>declare
+    type rc is ref cursor;
+    l_rc rc;
+    l_dummy all_objects.object_name%type;
+    l_start number default dbms_utility.get_time;
+begin
+    for i in 1 .. 9900
+    loop
+        open l_rc for
+        'select object_name
+           from dba_objects
+          where object_id = :x'
+        using i;
+        fetch l_rc into l_dummy;
+        close l_rc;
+    end loop;
+    dbms_output.put_line( round( (dbms_utility.get_time-l_start)/100, 2 ) || ' seconds...' );
+end;
+/
+
+SQL> set serveroutput off   
