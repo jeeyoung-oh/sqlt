@@ -1,0 +1,52 @@
+SQL> set autot off
+SQL> create index emp_job2_idx on emp(job,mgr)  ;
+SQL> @c:\sqlt\idx
+          emp 
+SQL> col column_name format a20
+        col index_name format a20 
+        select index_name, column_name, column_position
+        from user_ind_columns
+       where table_name='EMP'  ;
+
+SQL> set autot on exp
+SQL> select ename,sal , job,mgr from emp 
+         where job='CLERK' ; 
+SQL> select ename,sal from emp 
+         where mgr =7788;
+
+SQL> select ename,sal from emp 
+        where job >'MANAGER' AND mgr  > 7788  ;
+-->
+ SQL> alter session set optimizer_mode=all_rows; 
+
+  SQL> select max(ename) from emp ; 
+ 1> select ename,sal
+          from emp 
+          where ename > 'BLAKE'
+         order by ename DESC; 
+  2> select ename,sal
+          from emp 
+          where ename >'BLAKE'
+         order by sal DESC; 
+
+  3> select ename
+      from emp 
+          where ename >'BLAKE'
+         order by ename DESC;
+
+
+select job,mgr
+from emp 
+where job > 'A' 
+order by job, mgr; 
+
+
+select job,mgr
+from emp 
+where job > 'A' 
+order by  mgr, job ; 
+
+
+
+
+
