@@ -1,0 +1,38 @@
+1.
+conn   scott/tiger
+2. 
+create table t
+as
+select * from all_objects
+order by object_id; 
+ --> 테이블 레코드가 object_id 순으로 입력되도록 함
+
+create index t_object_id_idx on t(object_id);
+
+create index t_object_name_idx on t(object_name);
+
+exec dbms_stats.gather_table_stats(user, 'T');  
+ (( --> analyze table t compute statistics;  ))
+3.--->인덱스의 clustering_factor/num_rows  비율확인해 보기.
+
+select i.index_name, t.blocks table_blocks, 
+      i.num_rows, i.clustering_factor
+from   user_tables t, user_indexes i
+where  t.table_name = 'T'
+and    i.table_name = t.table_name;
+
+4. 인덱스 처리시 블럭access수 비교
+set linesize 150 
+alter session set statistics_level=all;
+
+select /*+ index(t t_object_id_idx) */ count(*) from t
+where  object_name >= ' '
+and    object_id >= 0;
+
+SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY_CURSOR(NULL, NULL, 'ALLSTATS LAST -ROWS'));
+
+select /*+ index(t t_object_name_idx ) */ count(*) from t
+where  object_name >= ' '
+and    object_id >= 0;
+
+SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY_CURSOR(NULL, NULL, 'ALLSTATS LAST -ROWS'));
