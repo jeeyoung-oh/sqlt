@@ -1,0 +1,12 @@
+
+create index idx1 on  판매집계 ( 판매월, 판매구분) ;
+start c:\sqlt\idx
+      판매집계 
+
+select count(*)
+from  판매집계 
+where 판매구분='A' and
+         판매월 between '202001' and '202012'; 
+
+start c:\sqlt\xplan 
+
