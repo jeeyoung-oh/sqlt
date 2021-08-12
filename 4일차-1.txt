@@ -1,0 +1,46 @@
+--1.
+-- driving 테이블 - 먼저 액세스하는 테이블 (또는 outer 테이블)
+-- inner 테이블 - 뒤에 액세스하는 테이블 (또는 drived 테이블)
+문제1>  아래 순서대로 NL조인시 어떤 인덱스를 생성해야 효과적인지
+        적절한 인덱스 생성을 검토 (departments 먼저일기)
+conn scott/tiger
+
+ exec clean_index;    
+ SET  AUTOT ON EXP 
+ select /*+ use_nl(d e) ordered */
+          d.department_name, e.first_name, e.salary, d.location_id
+ from departments d, employees e
+ where d.department_id = e.department_id
+ and e.salary > 3000
+ and d.location_id = 1500;
+
+ 1> employees 테이블 필요한 인덱스
+2> deparements 테이블 추가인덱스 
+
+*************************************************************************************
+문제2>  조인 순서가 바뀌면 다음처럼 변경되었을때 어떤 인덱스 구성이
+      효과적인가?
+exec clean_index;
+
+-- 추가한 인덱스를 사용하지 않는다면, 힌트를 추가하자.
+select /*+ use_nl(d e) leading(e d) index(d dept_idx1) */ 
+       d.department_name, e.first_name, e.salary, d.location_id
+from departments d, employees e
+where d.department_id = e.department_id
+and e.salary > 3000
+and d.location_id = 1500;
+ 
+
+문제3> 어떤 테이블을 먼저 읽는게 좋을지 NL조인순서와
+       효율적인 인덱스를 생성해 보는  연습
+
+exec clean_index;
+
+select /*+ use_nl(d e) */ 
+       d.department_name, e.first_name, e.salary, d.location_id
+from departments d, employees e
+where d.department_id = e.department_id
+and e.salary > 12000
+and d.location_id = 1700;
+
+
