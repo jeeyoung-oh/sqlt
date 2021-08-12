@@ -1,0 +1,49 @@
+
+  select e.ename, d.dname
+  from emp e, dept d; 
+
+ select e.ename, d.dname
+ from emp e CROSS JOIN  dept d; 
+
+1> 
+ select to_char( hiredate,'mm') 입사월,   count(*)
+ from emp 
+ group  by to_char(hiredate,'mm')  ; 
+
+2>
+select  deptno, to_char( hiredate,'mm') 입사월,   count(*)
+ from emp 
+ group  by deptno, to_char(hiredate,'mm')  ; 
+  ==> dept   모든부서의 1월부터12월까지 입사인원 표시되도록 
+        10  01-12(12ROW) 
+         20 01
+              :
+   48 ROW가 화면에 표시되도록...
+기준자료생성>>
+SELECT deptno, mon  
+FROM (  select deptno 
+          from dept ) A , 
+         (    select LPAD(level,2,'0') mon 
+          from dual
+         connect by level < 13   ) B; 
+
+SELECT T.deptno, T.mon,M.인원
+FROM (기준자료) T  , (select  deptno, to_char( hiredate,'mm') 입사월, count(*) 인원
+                                from emp 
+                               group  by deptno, to_char(hiredate,'mm') ) M
+WHERE  T.deptno = M.deptno(+)  
+      AND T.mon = M.입사월(+) 
+ORDER BY T.deptno, T.mon ; 
+-->
+SELECT T.deptno, T.mon,M.인원
+FROM (SELECT deptno, mon  
+FROM (  select deptno 
+          from dept ) A , 
+         (    select LPAD(level,2,'0') mon 
+          from dual
+         connect by level < 13   ) B) T  , (select  deptno, to_char( hiredate,'mm') 입사월, count(*) 인원
+                                from emp 
+                               group  by deptno, to_char(hiredate,'mm') ) M
+WHERE  T.deptno = M.deptno(+)  
+      AND T.mon = M.입사월(+) 
+ORDER BY T.deptno, T.mon ; 
