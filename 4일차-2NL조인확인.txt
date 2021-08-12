@@ -1,0 +1,90 @@
+튜닝대상문장>
+ conn tuning/tuning
+exec clean_index;
+ alter session set statistics_level=all; 
+SELECT /*+ USE_NL (c o d p) */ c.custno,SUBSTR(c.cname,1,5) , o.orderdate, d.qty,SUBSTR( p.pname,1,5)					
+FROM customers c, orders o, orderdetails d, products p							
+WHERE c.custno = o.custno							
+AND o.orderno = d.orderno							
+AND d.prodno = p.prodno							
+AND c.city = '서울'							
+AND o.paytype = '계좌이체'							
+AND d.qty <= 5							
+AND p.color = 'ORANGE';							
+
+@c:\sqlt\xplan
+   -->실행계획 check!!!
+/*********--<< 확인POINT>>**********/
+
+SELECT COUNT(*) FROM customers WHERE city = '서울';					
+SELECT COUNT(*) FROM orders WHERE paytype = '계좌이체';					
+SELECT COUNT(*) FROM orderdetails WHERE qty <= 5;					
+SELECT COUNT(*) FROM products WHERE color = 'ORANGE';					
+
+/*****순서조정1> products -> orderdetails -> orders -> customers****/				
+/* 각 테이블에 최적의 인덱스 1개씩 생성하기*/ 
+---변경1>> 
+CREATE INDEX products_color_idx ON products(color);						
+CREATE INDEX orderdetails_prodno_qty_idx ON orderdetails(prodno, qty);						
+CREATE INDEX orders_orderno_paytype_idx ON orders(orderno, paytype);						
+CREATE INDEX customers_custno_city_idx ON customers(custno, city);						
+
+SELECT /*+ USE_NL (c o d p) LEADING(p d o c) */ c.custno, SUBSTR(c.cname,1,5) , o.orderdate, d.qty,SUBSTR( p.pname,1,5)			
+FROM customers c, orders o, orderdetails d, products p								
+WHERE c.custno = o.custno									
+AND o.orderno = d.orderno									
+AND d.prodno = p.prodno									
+AND c.city = '서울'									
+AND o.paytype = '계좌이체'									
+AND d.qty <= 5									
+AND p.color = 'ORANGE';									
+@c:\sqlt\xplan
+
+--변경2>> 
+--새로 생성한 인덱스 사용하도록 실행계획 변경해서 확인하기
+SELECT /*+ USE_NL (c o d p) LEADING(p d o c) INDEX(o orders_orderno_paytype_idx) INDEX(c customers_custno_city_idx) */ 							
+           c.custno, SUBSTR(c.cname,1,5) , o.orderdate, d.qty, SUBSTR( p.pname,1,5)											
+FROM customers c, orders o, orderdetails d, products p											
+WHERE c.custno = o.custno											
+AND o.orderno = d.orderno											
+AND d.prodno = p.prodno											
+AND c.city = '서울'											
+AND o.paytype = '계좌이체'											
+AND d.qty <= 5											
+AND p.color = 'ORANGE';											
+
+@c:\sqlt\xplan
+---> 비효율부분은??? 
+
+--변경3 순서조정 인덱스 재생성 >> 
+--customers -> orders -> orderdetails -> products로 순서변경
+exec clean_index; 
+CREATE INDEX products_prodno_color_idx ON products(prodno, color);							
+CREATE INDEX orderdetails_orderno_qty_idx ON orderdetails(orderno, qty);							
+CREATE INDEX orders_custno_paytype_idx ON orders(custno, paytype);							
+CREATE INDEX customers_city_idx ON customers(city);							
+
+SELECT /*+ USE_NL (c o d p) ORDERED */ c.custno, SUBSTR(c.cname,1,5) , o.orderdate, d.qty,SUBSTR( p.pname,1,5)								
+FROM customers c, orders o, orderdetails d, products p								
+WHERE c.custno = o.custno								
+AND o.orderno = d.orderno								
+AND d.prodno = p.prodno								
+AND c.city = '서울'								
+AND o.paytype = '계좌이체'								
+AND d.qty <= 5								
+AND p.color = 'ORANGE';		
+
+@c:\sqlt\xplan
+
+--CASE4>> 인덱스 변경유도
+SELECT /*+ USE_NL (c o d p) ORDERED INDEX(p products_prodno_color_idx) */ c.custno,  SUBSTR(c.cname,1,5), o.orderdate, d.qty, SUBSTR( p.pname,1,5)						
+FROM customers c, orders o, orderdetails d, products p											
+WHERE c.custno = o.custno											
+AND o.orderno = d.orderno											
+AND d.prodno = p.prodno											
+AND c.city = '서울'											
+AND o.paytype = '계좌이체'											
+AND d.qty <= 5											
+AND p.color = 'ORANGE';											
+
+@c:\sqlt\xplan
