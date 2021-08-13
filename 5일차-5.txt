@@ -1,0 +1,19 @@
+conn tuning/ tuning 
+exec clean_index;
+alter session set statistics_level=all ; 
+CREATE INDEX orders_idx ON orders(orderdate);
+--튜닝전>>
+SELECT t.*
+FROM (SELECT ROWNUM rn, t.*
+          FROM (SELECT /*+ USE_NL(c o) */ o.orderno, o.orderdate,SUBSTR( c.cname,1,5) 
+                    FROM customers c, orders o
+                    WHERE o.custno = c.custno(+)
+                  AND orderdate BETWEEN TO_DATE('20190101', 'YYYYMMDD') 
+                          AND TO_DATE('20190201', 'YYYYMMDD') - 1
+                    ORDER BY o.orderdate, o.orderno) t
+           WHERE ROWNUM <= 10) t
+WHERE RN >= 1 AND RN <=10;
+
+@c:\sqlt\xplan
+
+
