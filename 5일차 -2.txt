@@ -1,0 +1,60 @@
+1) 
+conn tuning/tuning 
+
+alter session set statistics_level=all; 
+set linesize 150 
+
+SELECT  E.ENAME, E.SAL,
+         (select dname from dept
+                        where deptno = E.DEPTNO)부서명,
+         (select loc from dept
+                        where deptno = E.DEPTNO) 지역
+FROM  EMP E ;
+@c:\sqlt\xplan
+
+select distinct deptno from emp ; 
+
+
+2)select절 서브쿼리 사용시 주의점 
+SELECT  E.ENAME, E.SAL,
+         (select dname, loc from dept
+                        where deptno = E.DEPTNO) 부서지역
+FROM EMP E; 
+
+
+SELECT  E.ENAME, E.SAL,
+         (select dname from dept) 
+FROM  EMP E; 
+
+
+---> select절 서브쿼리는 실행순서 고정
+      MAIN 문장부터 실행후 결과ROW만큼 서브쿼리 반복수행
+        ( 처리결과  filter 처럼 memory 버퍼에 저장
+          참조가능함 )
+   실행계획은 가장 위쪽에 표시됨. 
+3) 
+
+exec clean_index;
+alter session set statistics_level=all;
+
+--<<스칼라서브쿼리사용>> 
+SELECT 
+       A.ORDERNO, A.ORDERDATE
+     , (SELECT SUBSTR( CNAME,1,5)  FROM CUSTOMERS B 
+         WHERE A.CUSTNO = B.CUSTNO) CUST_NAME
+     , A.TOTAL
+  FROM ORDERS A
+ WHERE A.ORDERDATE >= TO_DATE('20190101', 'YYYYMMDD')
+   AND A.ORDERDATE < TO_DATE('20200101', 'YYYYMMDD');
+
+@C:\sqlt\xplan   
+
+
+
+
+
+
+
+
+ 
+
