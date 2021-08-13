@@ -1,0 +1,47 @@
+1>
+conn scott/tiger
+set autot on exp
+2>
+ with v_emp as
+(select department_id, sum(salary) total
+      from employees
+      where salary > 1000
+      group by department_id
+      having sum(salary) > 10000)
+select /*+ use_nl(e d) leading(e d) */
+     d.department_name, e.total
+from departments d, v_emp e
+where d.department_id = e.department_id;
+
+
+3> 
+select/*+ no_merge (e)  */ d.department_name, e.total
+from departments d, (select department_id, sum(salary) total
+      from employees
+      where salary > 1000
+      group by department_id
+      having sum(salary) > 10000) e
+where d.department_id = e.department_id
+union all
+select /*+ no_merge (e)  */ d.department_name, e.total
+from departments d,
+     (select department_id, sum(salary) total
+      from employees
+      where salary > 1000
+      group by department_id
+      having sum(salary) > 10000) e
+where d.manager_id > 100;
+4> 
+with v_emp as
+(select department_id, sum(salary) total
+      from employees
+      where salary > 1000
+      group by department_id
+      having sum(salary) > 10000)
+select /*+ use_nl(e d) leading(e d) */ d.department_name, e.total
+from departments d, v_emp e
+where d.department_id = e.department_id
+union all
+select /*+ use_nl(e d) leading(e d) */ d.department_name, e.total
+from departments d, v_emp e
+where d.manager_id > 100;
