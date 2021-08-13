@@ -1,0 +1,48 @@
+conn tuning/tuning
+ alter session set statistics_level=all ;
+set linesize 150
+ EXEC  CLEAN_INDEX; 
+ CREATE INDEX ORDER_DATE_IDX ON ORDERS (ORDERDATE) ; 
+--1)
+SELECT  A.ORDERNO, A.TOTAL,A.PAYTYPE, A.STATUS
+  FROM ORDERS A
+ WHERE ORDERDATE >= TO_DATE('20191201', 'YYYYMMDD')
+   AND ORDERDATE < TO_DATE('20200101', 'YYYYMMDD')
+   AND EXISTS (SELECT  1 FROM CUSTOMERS B
+                       WHERE A.CUSTNO = B.CUSTNO
+                        AND B.GRADE ='VIP');
+
+@c:\sqlt\xplan
+
+--2)  
+SELECT  A.ORDERNO, A.TOTAL,A.PAYTYPE, A.STATUS
+  FROM ORDERS A
+ WHERE ORDERDATE >= TO_DATE('20191201', 'YYYYMMDD')
+   AND ORDERDATE < TO_DATE('20200101', 'YYYYMMDD')
+   AND EXISTS (SELECT /*+ NO_UNNEST */  1 FROM CUSTOMERS B
+                       WHERE A.CUSTNO = B.CUSTNO
+                        AND B.GRADE ='VIP');
+@c:\sqlt\xplan
+
+
+튜닝전1 >>
+conn tuning/tuning
+exec clean_index;
+alter session set statistics_level=all;
+
+CREATE INDEX customers_idx ON customers(city);
+CREATE INDEX orders_idx ON orders(custno);
+
+SELECT DISTINCT   c.custno, substr(c.cname, 1, 5), c.city, c.grade
+FROM  customers c , orders o
+WHERE o.custno = c.custno
+AND o.paytype = '신용카드'
+ AND c.city = '서울' ; 
+
+@c:\sqlt\xplan
+
+
+
+
+
+
